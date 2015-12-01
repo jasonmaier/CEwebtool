@@ -1,0 +1,30 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+{% block content %}
+<h1>The Tool will be here</h1>
+<div class="well">
+  <a href="http://www.ellenmacarthurfoundation.org/assets/downloads/insight/Circularity-Indicators_Methodology_May2015.pdf ">Here is the link for the Methodology</a>
+</div>
+{% include 'flash.html' %}
+<div class="well">
+   <form class="form-horizontal" action="" method="mass" name="mass">
+      <div class="control-group{% if form.post.errors %} error{% endif %}">
+         <label class="control-label" for="mass">{{ _('mass:') }}</label>
+         <div class="controls">
+            {{ form.post(size=30, maxlength=140) }}
+            {% for error in form.post.errors %}
+            <span class="help-inline">[{{ error }}]</span><br>
+            {% endfor %}
+         </div>
+      </div>
+      <div class="control-group">
+         <div class="controls">
+            <input class="btn btn-primary" type="submit" value="{{ _('Post!') }}">
+         </div>
+      </div>
+   </form>
+</div>
+{% for post in posts.items %}
+{% include 'post.html' %}
+{% endfor %}
+{% endblock %}
