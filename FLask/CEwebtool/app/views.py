@@ -10,11 +10,46 @@ from flask.ext.babel import gettext
 from datetime import datetime
 from guess_language import guessLanguage
 from app import app, db, lm, oid, babel
-from .forms import LoginForm, EditForm, PostForm, SearchForm, UserData
-from .models import User, Post, Data
+from .forms import LoginForm, EditForm, PostForm, SearchForm, UserData, AddTask
+from .models import User, Post, Data , Tasks
 from .emails import follower_notification
 from .translate import microsoft_translate
 from config import POSTS_PER_PAGE, MAX_SEARCH_RESULTS, LANGUAGES,     DATABASE_QUERY_TIMEOUT
+from calculations import webtool
+
+def VirginFeedStock(Mass, Fr, Fu):
+        VirginFeed = Mass * (1 - Fr - Fu)
+        return VirginFeed
+
+
+def UnrecovWaste(Mass, Cr, Cu, Ef, Ec, Fr, Fu):
+        if Ef == 0:
+            Wf = 1
+            W0 = Mass * (1 - Cr - Cu)
+            Wc = Mass * (1 - Ec) * Cr
+            Wtot = W0 + (Wf + Wc)/2
+        else:
+            W0 = Mass * (1 - Cr - Cu)
+            Wc = Mass * (1 - Ec) * Cr
+            Wf = Mass * ((1 - Ef)*Fr/Ef)
+            Wtot = W0 + (Wf + Wc)/2
+        return Wtot, Wc, Wf
+
+
+def LinearFlowIndex(Mass, Fr, Fu, Cr, Cu, Ef, Ec):
+        VirginFeed = VirginFeedStock(Mass, Fr, Fu)
+        Wtot, Wc, Wf = UnrecovWaste(Mass, Cr, Cu, Ef, Ec, Fr, Fu)
+        LFI = (VirginFeed + Wtot)/(2 * Mass + (Wf - Wc)/2)
+        return LFI
+
+def Utility(L, Lav, U, Uav):
+        X = (L/Lav)*(U/Uav)
+        return X  
+        
+def MatCircInd(LFI, X):
+        MCIx = 1 - LFI * (0.9/X)
+        MCI = max(0, MCIx)
+        return MCI      
 
 
 @lm.user_loader
@@ -126,21 +161,51 @@ def after_login(resp):
 
 @app.route('/tool', methods = ['GET', 'POST'])
 def tool():
-    form = PostForm()
-    mass = g.user.mass
-    mass_now = UserData()
-    if mass_now.validate_on_submit():
-        mass = Data(mass=mass_now.mass.data, timestamp=datetime.utcnow(),
+    entered = UserData()
+    if entered.validate_on_submit():
+        data = Data(mass=entered.mass.data, timestamp=datetime.utcnow(),
                     author=g.user, language=language)
         db.session.add(mass)
         db.session.commit()
         flash(gettext('Your product mass has been entered!'))
         return redirect(url_for('tool'))
-    posts = g.user.followed_posts()
     return render_template('tool.html',
                            title='Home',
-                           mass=mass, form=form, posts=posts)
+                           entered=entered)
     
+
+@app.route('/add',methods=['GET','POST'])
+@login_required
+def new_task():
+    form = AddTask()
+    if form.validate_on_submit():
+        Mass = form.Mass.data
+        Fr = form.Fr.data
+        Fu = form.Fu.data
+        Cr = form.Cr.data
+        Cu = form.Cu.data
+        Ec = form.Ec.data
+        Ef = form.Ef.data
+        L = form.L.data
+        Lav = form.Lav.data
+        U = form.U.data
+        Uav = form.Uav.data
+        VirginFeed = VirginFeedStock(Mass, Fr, Fu)
+        Wtot, Wc, Wf = UnrecovWaste(Mass, Cr, Cu, Ef, Ec, Fr, Fu)
+        LFI = LinearFlowIndex(Mass, Fr, Fu, Cr, Cu, Ef, Ec)
+        X = Utility (L, Lav, U, Uav)
+        MCI = MatCircInd(LFI, X)
+        form_tasks = Tasks(description=form.task.data, product = form.product.data, industry = form.industry.data,
+                    author=g.user, Mass = form.Mass.data, Fr = form.Fr.data, Fu = form.Fu.data, Cr = form.Cr.data, 
+                    Cu = form.Cu.data, Ec = form.Ec.data, Ef = form.Ef.data, L = form.L.data, Lav = form.Lav.data,
+                    U = form.U.data, Uav = form.Uav.data, VirginFeed = VirginFeed, Wtot = Wtot, Wc = Wc, Wf = Wf, 
+                    LFI = LFI, X = X, MCI = MCI)
+        db.session.add(form_tasks)
+        db.session.commit()
+        return redirect(url_for('new_task'))
+    tasks = g.user.task_entries()
+    return render_template('form.html',form=form, tasks= tasks)
+
 
 @app.route('/logout')
 def logout():
@@ -237,6 +302,20 @@ def delete(id):
     flash('Your post has been deleted.')
     return redirect(url_for('index'))
 
+@app.route('/delete_task/<int:id>')
+@login_required
+def delete_task(id):
+    task = Tasks.query.get(id)
+    if task is None:
+        flash('Task not found.')
+        return redirect(url_for('new_task'))
+    if task.author.id != g.user.id:
+        flash('You cannot delete this post.')
+        return redirect(url_for('new_task'))
+    db.session.delete(task)
+    db.session.commit()
+    flash('Your post has been deleted.')
+    return redirect(url_for('new_task'))
 
 @app.route('/search', methods=['POST'])
 @login_required

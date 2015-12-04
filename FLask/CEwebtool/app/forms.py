@@ -5,8 +5,8 @@
 
 from flask.ext.wtf import Form
 from flask.ext.babel import gettext
-from wtforms import StringField, BooleanField, TextAreaField
-from wtforms.validators import DataRequired, Length
+from wtforms import StringField, BooleanField, TextAreaField, IntegerField, PasswordField, FloatField, TextField, DateField, SelectField
+from wtforms.validators import DataRequired, InputRequired, Length, EqualTo
 from .models import User
 
 
@@ -47,8 +47,22 @@ class PostForm(Form):
 
 class UserData(Form):
     mass = StringField('mass', validators=[DataRequired()])
-    
 
 class SearchForm(Form):
     search = StringField('search', validators=[DataRequired()])
 
+class AddTask(Form):
+  product = TextAreaField('product',validators=[DataRequired()])
+  industry = TextAreaField('industry',validators=[DataRequired()])
+  task = TextAreaField('description',validators=[DataRequired()])
+  Mass = FloatField('Mass', validators=[InputRequired()]) 
+  Fr = FloatField('Fr', validators=[InputRequired()]) 
+  Fu = FloatField('Fu', validators=[InputRequired()]) 
+  Cr = FloatField('Cr', validators=[InputRequired()]) 
+  Cu = FloatField('Cu', validators=[InputRequired()]) 
+  Ec = FloatField('Ec', validators=[InputRequired()]) 
+  Ef = FloatField('Ef', validators=[InputRequired()]) 
+  L = FloatField('L', validators=[InputRequired()]) 
+  Lav = FloatField('Lav', validators=[InputRequired()]) 
+  U = FloatField('U', validators=[InputRequired()]) 
+  Uav = FloatField('Uav', validators=[InputRequired()]) 

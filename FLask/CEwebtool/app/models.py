@@ -8,6 +8,7 @@ import re
 from app import db
 from app import app
 
+
 import sys
 if sys.version_info >= (3, 0):
     enable_search = False
@@ -27,7 +28,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
-    mass = db.Column(db.String(120), index=True)
+    tasks = db.relationship('Tasks', backref='author', lazy='dynamic')
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime)
@@ -95,6 +96,10 @@ class User(db.Model):
                 followers.c.follower_id == self.id).order_by(
                     Post.timestamp.desc())
 
+    def task_entries(self):
+        return Tasks.query.all()
+
+
     def __repr__(self):  # pragma: no cover
         return '<User %r>' % (self.nickname)
 
@@ -112,16 +117,47 @@ class Post(db.Model):
         return '<Post %r>' % (self.body)
 
 
-                     
+class Tasks(db.Model):
+
+    id = db.Column(db.Integer,primary_key=True)
+    description = db.Column(db.String(140))
+    product = db.Column(db.String(140))
+    industry = db.Column(db.String(140))
+    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
+    Mass = db.Column(db.Float)
+    Fr = db.Column(db.Float) 
+    Fu = db.Column(db.Float) 
+    Cr = db.Column(db.Float)  
+    Cu = db.Column(db.Float) 
+    Ec = db.Column(db.Float) 
+    Ef = db.Column(db.Float) 
+    L = db.Column(db.Float) 
+    Lav = db.Column(db.Float) 
+    U = db.Column(db.Float) 
+    Uav = db.Column(db.Float) 
+    VirginFeed = db.Column(db.Float)
+    Wtot = db.Column(db.Float)
+    Wc = db.Column(db.Float)
+    Wf = db.Column(db.Float)
+    LFI = db.Column(db.Float)
+    X = db.Column(db.Float)
+    MCI = db.Column(db.Float)
+
+    def __repr__(self):
+        return '<Tasks %r>' % (self.description)
+
+#    def __init__(self,name,due_date,priority,posted_date,users_id,category,super_category,description):
+                 
                      
 class Data(db.Model):
-    __searchable__ = ['body']
-    mass = db.Column(db.Integer, primary_key=True)
+    __searchable__ = ['mass']
+    mass = db.Column(db.String(40), primary_key=True)
+    timestamp = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    language = db.Column(db.String(5))
                      
     def __repr__(self): 
-        return '<Data %r>' % (sef)
+        return '<Data %r>' % (self.mass)
                      
 if enable_search:
     whooshalchemy.whoosh_index(app, Post)
-

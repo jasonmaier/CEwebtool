@@ -7,24 +7,22 @@
 </div>
 {% include 'flash.html' %}
 <div class="well">
-   <form class="form-horizontal" action="" method="mass" name="mass">
-      <div class="control-group{% if form.post.errors %} error{% endif %}">
-         <label class="control-label" for="mass">{{ _('mass:') }}</label>
-         <div class="controls">
-            {{ form.post(size=30, maxlength=140) }}
-            {% for error in form.post.errors %}
-            <span class="help-inline">[{{ error }}]</span><br>
-            {% endfor %}
-         </div>
-      </div>
-      <div class="control-group">
-         <div class="controls">
-            <input class="btn btn-primary" type="submit" value="{{ _('Post!') }}">
-         </div>
-      </div>
-   </form>
+   <div class="form-group">
+      {{ form.hidden_tag() }}
+  <label for="company">Company:</label>
+  <input type="text" class="form-control" id="company">
 </div>
-{% for post in posts.items %}
-{% include 'post.html' %}
-{% endfor %}
+<div class="form-group">
+  <label for="product">Product Type:</label>
+  <input type="product" class="form-control" id="product">
+  <div class="form-group">
+  <label for="mass">Mass:</label>
+  <input type="text" class="form-control" id="mass">
+</div>
+    <div class="form-group">        
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-default">Submit</button>
+      </div>
+</div>
+</div>
 {% endblock %}
